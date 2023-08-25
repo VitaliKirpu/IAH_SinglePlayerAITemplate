@@ -10,9 +10,11 @@ using Newtonsoft.Json.Linq;
 
 namespace IAH_SinglePlayerAutomation
 {
-    internal class Program
+    internal static class Program
     {
         private static HttpClient httpClient;
+
+        private static string currenPlayertState = "";
 
         public static async Task Main(string[] args)
         {
@@ -21,13 +23,12 @@ namespace IAH_SinglePlayerAutomation
                 httpClient.BaseAddress = new Uri("http://127.0.0.1:6800");
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                
+
                 Console.WriteLine("Starting Singleplayer AI Template...");
                 await Task.Delay(3000); // run every 3 sec
-                
+
                 while (true)
                 {
-                    string currentState = "";
                     var response = await httpClient.GetAsync($"/v1/playerstate");
                     string responseContent = await response.Content.ReadAsStringAsync();
 
@@ -40,31 +41,22 @@ namespace IAH_SinglePlayerAutomation
                         /* STARTING
                          * LOADING
                          * MAIN_MENU_INTRO
+                         * MAIN_MENU
                          * MODE_SELECTION
                          * HACKER_SELECTION
+                         * HACKER_SELECT
+                         * SANDBOX
                          * INGAME
                          * GAMEOVER
                          */
 
-                        string newState = requestResponse.state;
+                        Console.WriteLine("Current Player State: " + requestResponse.state);
 
-                        if (newState != currentState && newState == "MAIN_MENU_INTRO")
-                        {
-                            var data = new Dictionary<string, string>
-                            {
-                                {"transition", "MAIN_MENU"}
-                            };
-
-                            var jsonData = JsonConvert.SerializeObject(data);
-                            
-                            Console.WriteLine("Enter Main Menu...");
-                            
-                            PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
-                            if (postResponse.IsSuccessStatusCode)
-                            {
-                                currentState = newState;
-                            }
-                        }
+                        await MainMenuTransition(requestResponse);
+                        await ModeSelectionTransition(requestResponse);
+                        await HackerSelectionTransition(requestResponse);
+                        await HackerSelectTransition(requestResponse);
+                        await GameOverTransition(requestResponse);
                     }
 
                     await Task.Delay(1000); // run every 1 sec
@@ -72,6 +64,179 @@ namespace IAH_SinglePlayerAutomation
             }
         }
 
+        private static async Task<bool> MainMenuTransition(TransitionResponse response)
+        {
+            if (string.IsNullOrEmpty(response.state))
+            {
+                return false;
+            }
+
+            if (response.state == currenPlayertState)
+            {
+                return false;
+            }
+
+            if (response.state == "MAIN_MENU_INTRO")
+            {
+                var jsonData = JsonConvert.SerializeObject(new Dictionary<string, string>
+                {
+                    {"transition", "MAIN_MENU"}
+                });
+
+                Console.WriteLine("Enter Main Menu...");
+
+                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.IsSuccessStatusCode)
+                {
+                    currenPlayertState = response.state;
+                    response.state = ""; // consume state.
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private static async Task<bool> ModeSelectionTransition(TransitionResponse response)
+        {
+            if (string.IsNullOrEmpty(response.state))
+            {
+                return false;
+            }
+
+            if (response.state == currenPlayertState)
+            {
+                return false;
+            }
+
+            if (response.state == "MAIN_MENU")
+            {
+                var jsonData = JsonConvert.SerializeObject(new Dictionary<string, string>
+                {
+                    {"transition", "MODE_SELECTION"}
+                });
+
+                Console.WriteLine("Enter Mode Selection Menu...");
+
+                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.IsSuccessStatusCode)
+                {
+                    currenPlayertState = response.state;
+                    response.state = ""; // consume state.
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private static async Task<bool> HackerSelectionTransition(TransitionResponse response)
+        {
+            if (string.IsNullOrEmpty(response.state))
+            {
+                return false;
+            }
+
+            if (response.state == currenPlayertState)
+            {
+                return false;
+            }
+
+            if (response.state == "MODE_SELECTION")
+            {
+                var jsonData = JsonConvert.SerializeObject(new Dictionary<string, string>
+                {
+                    {"transition", "HACKER_SELECTION"}
+                });
+
+                Console.WriteLine("Enter Hacker Selection Menu...");
+
+                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.IsSuccessStatusCode)
+                {
+                    currenPlayertState = response.state;
+                    response.state = ""; // consume state.
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private static async Task<bool> HackerSelectTransition(TransitionResponse response)
+        {
+            if (string.IsNullOrEmpty(response.state))
+            {
+                return false;
+            }
+
+            if (response.state == currenPlayertState)
+            {
+                return false;
+            }
+
+            if (response.state == "HACKER_SELECTION")
+            {
+                var jsonData = JsonConvert.SerializeObject(new Dictionary<string, object>
+                {
+                    {"transition", "HACKER_SELECT"},
+                    {"transitionValue", 0}
+                });
+
+                Console.WriteLine("Select Hacker...");
+
+                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.IsSuccessStatusCode)
+                {
+                    currenPlayertState = response.state;
+                    response.state = ""; // consume state.
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+        
+        private static async Task<bool> GameOverTransition(TransitionResponse response)
+        {
+            if (string.IsNullOrEmpty(response.state))
+            {
+                return false;
+            }
+
+            if (response.state == currenPlayertState)
+            {
+                return false;
+            }
+
+            if (response.state == "INGAME")
+            {
+                var jsonData = JsonConvert.SerializeObject(new Dictionary<string, object>
+                {
+                    {"transition", "GAMEOVER"}
+                });
+
+                Console.WriteLine("Game Over...");
+
+                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.IsSuccessStatusCode)
+                {
+                    currenPlayertState = response.state;
+                    response.state = ""; // consume state.
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        
+        
         static async Task<PostResponse> SendPostRequestAsync(string endpoint, string jsonData)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
