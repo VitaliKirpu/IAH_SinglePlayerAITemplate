@@ -44,6 +44,11 @@
           <HintPath>..\packages\System.Net.Http.4.3.4\lib\net46\System.Net.Http.dll</HintPath>
           <Private>True</Private>
         </Reference>
+        <Reference Include="System.Numerics" />
+        <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+          <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
         <Reference Include="System.Security.Cryptography.Algorithms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
           <HintPath>..\packages\System.Security.Cryptography.Algorithms.4.3.0\lib\net46\System.Security.Cryptography.Algorithms.dll</HintPath>
           <Private>True</Private>
@@ -63,16 +68,17 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Class\PostResponse.cs" />
+        <Compile Include="Class\GameState.cs" />
+        <Compile Include="Class\Response\GameStateResponse.cs" />
+        <Compile Include="Class\Response\PostResponse.cs" />
+        <Compile Include="Class\Response\TilesResponse.cs" />
         <Compile Include="Class\Response\TransitionResponse.cs" />
+        <Compile Include="Class\Tile.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
       <None Include="packages.config" />
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="Class\Request" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
