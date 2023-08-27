@@ -88,16 +88,20 @@ namespace IAH_SinglePlayerAutomation
                         await InitialMenuSequence();
 
                         // gameplay centric logic.
-                        if (gameState.CanPerformAction())
+                        if (gameState != null)
                         {
-                            await BrowseInternet();
-                            await UseWWWBlock();
-                            await ClickLevelUp();
+                            if ( gameState.CanPerformAction())
+                            {
+                                await BrowseInternet();
+                                await UseWWWBlock();
+                                await ClickLevelUp();
+                            }
+                            await UseFramework();
+
+                            await RunAILogic();
                         }
 
-                        await UseFramework();
-
-                        await RunAILogic();
+                   
 
 
                         /* few other endpoints
