@@ -12,5 +12,7 @@ namespace IAH_SinglePlayerAutomation.Class.Response
         public int chaosCards;
         public int TPCards;
         public int level;
+        public int relativeDificulty;
+        public int actionTurn;
     }
 }

@@ -68,10 +68,17 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Class\Entity.cs" />
         <Compile Include="Class\GameState.cs" />
+        <Compile Include="Class\GridNode.cs" />
+        <Compile Include="Class\Response\APIPasswordResponse.cs" />
+        <Compile Include="Class\Response\BufferResponse.cs" />
+        <Compile Include="Class\Response\EntityResponse.cs" />
         <Compile Include="Class\Response\GameStateResponse.cs" />
+        <Compile Include="Class\Response\GridResponse.cs" />
         <Compile Include="Class\Response\PostResponse.cs" />
         <Compile Include="Class\Response\TilesResponse.cs" />
+        <Compile Include="Class\Response\TpScreenResponse.cs" />
         <Compile Include="Class\Response\TransitionResponse.cs" />
         <Compile Include="Class\Tile.cs" />
         <Compile Include="Program.cs" />
