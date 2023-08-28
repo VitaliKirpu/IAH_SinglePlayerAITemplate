@@ -7,52 +7,54 @@ namespace IAH_SinglePlayerAutomation.Class
 {
     public class Entity
     {
-        public string uniqueID;
-        public Vector3 position;
+        public List<string> equips = new List<string>();
+        public List<string> skills = new List<string>();
+        public List<string> tags = new List<string>();
+
+        public float attackDelay;
+        public float attackRange;
         public Vector3 forward;
-        public Vector3 right;
+
+        public string targetUniqueID;
+
         public string team;
         public string teamCustom;
-        public string ip;
         public string type;
-
-        public int hp;
-        public int maxHp;
-        public int sp;
-        public int maxSp;
-        public int xp;
-        public int xpNeeded;
-
-        public List<string> tags = new List<string>();
-        public List<string> equips = new List<string>();
+        public string uniqueID;
+        public string ip;
 
         public int ammo;
         public int maxAmmo;
 
+        public int maxHp;
+        public int maxSp;
+        public int sp;
+        public int hp;
+        public int xp;
+        public int xpNeeded;
+
+        public Vector3 position;
+
         public bool reloading;
-        public float attackdelay;
+        public Vector3 right;
 
-        public float attackRange;
-
-        public string targetUniqueID;
-
-        public  async Task RunAI()
+        public async Task RunAI()
         {
-            List<Entity> entities = Program.gameState.GetEntitiesByFlag("HOSTILE");
+            var entities = Program.gameState.GetEntitiesByFlag("HOSTILE");
 
             //remove bots that have creep flag or non-combat
-            entities = entities.Where(entity => !entity.tags.Contains("CREEP") && !entity.tags.Contains("NON-COMBAT")).ToList();
+            entities = entities.Where(entity => !entity.tags.Contains("CREEP") && !entity.tags.Contains("NON-COMBAT"))
+                .ToList();
 
             // we attack closest enemy.
             entities = entities.OrderBy(entity => Vector3.Distance(position, entity.position)).ToList();
 
-
             if (entities.Count > 0) // battle mode.
             {
-                float distance = Vector3.Distance(position, entities[0].position);
-                
-                bool blocked = await Program.Raycast(uniqueID, entities[0].uniqueID);
-                
+                var distance = Vector3.Distance(position, entities[0].position);
+
+                var blocked = await Program.Raycast(uniqueID, entities[0].uniqueID);
+
                 if (distance < attackRange && blocked == false)
                 {
                     Program.BotAction(uniqueID, "rotate", entities[0].position);
@@ -72,13 +74,15 @@ namespace IAH_SinglePlayerAutomation.Class
                 if (ammo != maxAmmo && reloading == false)
                 {
                     Program.BotAction(uniqueID, "reload", "");
+                    Program.BotAction(uniqueID, "chat", "Reloading!");
                 }
+
                 Program.BotAction(uniqueID, "rotate", position + right);
             }
 
-
             /*
-             * few other actions: reload, cancel_attack , stop these don't have actionValue.
+             * other actions:  cancelAttack, stop, these don't have actionValue.
+             * skill: value int from 0 to 3. bot will use skill if has any.
              */
         }
     }

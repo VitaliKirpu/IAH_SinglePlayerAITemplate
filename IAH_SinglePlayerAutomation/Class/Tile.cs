@@ -4,14 +4,14 @@ namespace IAH_SinglePlayerAutomation.Class
 {
     public class Tile
     {
-        public string uniqueID;
-        public Vector3 position;
+        public string equipType;
+
+        public string frameworkType;
+        public bool isBusy;
+        public bool isOpen;
         public string mainType;
+        public Vector3 position;
         public string type;
-        public bool IsOpen;
-        public bool IsBusy;
-        
-        public string FrameworkType;
-        public string EquipType;
+        public string uniqueID;
     }
 }

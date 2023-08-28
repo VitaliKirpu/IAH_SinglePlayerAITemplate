@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
 using IAH_SinglePlayerAutomation.Class;
 using IAH_SinglePlayerAutomation.Class.Response;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace IAH_SinglePlayerAutomation
 {
@@ -17,9 +16,9 @@ namespace IAH_SinglePlayerAutomation
 
         /*
          * When our currentPlayerState is INGAME we create gameState class to hold tiles and entities.
-         * This is rough example, you should create your own AI, you can do it in C#, JS,etc, use some DX or GDI Library to visualize output.
-         * Visit HTTPS://IAMHACKER.CC for more information or for support, we have discord server there, also don't forget to wishlist game on Steam.
-         * https://store.steampowered.com/app/304770/IAH_INTERNET_WAR/
+         * This is rough example designed to be refactored or remade, you should create your own AI, you can do it in C#, JS,etc, use some DX or GDI Library to visualize output.
+         * Visit HTTPS://IAMHACKER.CC for more information or for support, we have discord server there,
+         * also don't forget to wishlist game on Steam: https://store.steampowered.com/app/304770/IAH_INTERNET_WAR/
          */
         public static GameState gameState;
         private static string apiPassword;
@@ -29,6 +28,7 @@ namespace IAH_SinglePlayerAutomation
         {
             using (httpClient = new HttpClient())
             {
+                // you can specify different port in the game launch parameters (default is 6800) -> for example: -apiPort 6900
                 httpClient.BaseAddress = new Uri("http://127.0.0.1:6800");
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -38,12 +38,12 @@ namespace IAH_SinglePlayerAutomation
 
                 while (true)
                 {
-                    var response = await httpClient.GetAsync($"/v1/playerstate");
-                    string responseContent = await response.Content.ReadAsStringAsync();
+                    var response = await httpClient.GetAsync("/v1/playerstate");
+                    var responseContent = await response.Content.ReadAsStringAsync();
 
                     if (response.IsSuccessStatusCode)
                     {
-                        TransitionResponse requestResponse =
+                        var requestResponse =
                             JsonConvert.DeserializeObject<TransitionResponse>(responseContent);
 
                         /* STARTING
@@ -59,10 +59,7 @@ namespace IAH_SinglePlayerAutomation
                          * GAMEOVER
                          */
 
-                        if (gameState == null)
-                        {
-                            gameState = new GameState();
-                        }
+                        if (gameState == null) gameState = new GameState();
 
                         await MainMenuTransition(requestResponse);
                         await ModeSelectionTransition(requestResponse);
@@ -75,6 +72,7 @@ namespace IAH_SinglePlayerAutomation
                         await GetGrid(requestResponse);
                         await GetEntities(requestResponse);
                         await GetGameState(requestResponse);
+                        await GetSystemState(requestResponse);
                         await GetBufferTiles(requestResponse);
 
                         await GetAPIPassword(requestResponse);
@@ -90,18 +88,17 @@ namespace IAH_SinglePlayerAutomation
                         // gameplay centric logic.
                         if (gameState != null)
                         {
-                            if ( gameState.CanPerformAction())
+                            if (gameState.CanPerformAction())
                             {
                                 await BrowseInternet();
                                 await UseWWWBlock();
                                 await ClickLevelUp();
                             }
+
                             await UseFramework();
 
                             await RunAILogic();
                         }
-
-                   
 
 
                         /* few other endpoints
@@ -117,10 +114,7 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> GetAPIPassword(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
             // API PAssword is used to authenticate your APILicense with the game and provide
             // you with a password that you have to protect during your gameplay session.
@@ -128,18 +122,21 @@ namespace IAH_SinglePlayerAutomation
             // When you perform Bot Functions you need always supply API Password.
             // API Password is always regenerated when your RemoteUserBot respawns. if this function is not called every 15-24 seconds game will exit AI Mode.
             // In multiplayer certain bots can crack API Passwords giving you or enemies ability to hjack bots.
+            // API Key and API Password are not the same thing, never reveal your API Key.
             if (response.state == "INGAME")
             {
                 var jsonData = JsonConvert.SerializeObject(new Dictionary<string, object>
                 {
-                    {"ip", "127.0.0.1"}, // in campaign mode this will be always 127.0.0.1 for your RemoteUserBot
-                    {"apiKey", "apiKey"} // HTTPS://IAMHACKER.CC -> Get API Key
+                    {
+                        "ip", "127.0.0.1"
+                    }, // in campaign mode this will be always 127.0.0.1 for your RemoteUserBot even if you operate your AI from some other PC.
+                    {"apiKey", "uDYFP81Pvwf1-120vs"} // HTTPS://IAMHACKER.CC -> Get API Key
                 });
 
-                PostResponse postResponse = await SendPostRequestAsync("/v1/apipassword", jsonData);
-                if (postResponse.IsSuccessStatusCode)
+                var postResponse = await SendPostRequestAsync("/v1/apipassword", jsonData);
+                if (postResponse.isSuccessStatusCode)
                 {
-                    APIPasswordResponse passwordResponse =
+                    var passwordResponse =
                         JsonConvert.DeserializeObject<APIPasswordResponse>(postResponse.responseString);
                     apiPassword = passwordResponse.apiPassword;
                     remoteBotIP = passwordResponse.ip;
@@ -165,11 +162,8 @@ namespace IAH_SinglePlayerAutomation
                 {"actionValue", actionValue}
             });
 
-            PostResponse postResponse = await SendPostRequestAsync("/v1/botaction", jsonData);
-            if (postResponse.IsSuccessStatusCode)
-            {
-                return true;
-            }
+            var postResponse = await SendPostRequestAsync("/v1/botaction", jsonData);
+            if (postResponse.isSuccessStatusCode) return true;
 
 
             return false;
@@ -177,13 +171,9 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task RunAILogic()
         {
-            for (int i = 0; i < gameState.entities.Count; i++)
-            {
+            for (var i = 0; i < gameState.entities.Count; i++)
                 if (gameState.entities[i].ip == remoteBotIP)
-                {
                     gameState.entities[i].RunAI();
-                }
-            }
 
             // 0.2 sec delay..
             await Task.Delay(200);
@@ -207,25 +197,24 @@ namespace IAH_SinglePlayerAutomation
                                             + " | Web Buffer Tiles: " + gameState.webBufferTiles.Count);
 
                 Console.WriteLine("API Password: " + apiPassword + " | RemoteBot IP: " + remoteBotIP);
+                
+                Console.WriteLine("System FPS: " + gameState.fps + " | Version: " + gameState.version );
             }
         }
 
         private static async Task<bool> TpScreen(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
             if (response.state == "TPSCREEN")
             {
-                var getReponse = await httpClient.GetAsync($"/v1/tpscreen");
-                string responseContent = await getReponse.Content.ReadAsStringAsync();
+                var getReponse = await httpClient.GetAsync("/v1/tpscreen");
+                var responseContent = await getReponse.Content.ReadAsStringAsync();
                 if (getReponse.IsSuccessStatusCode)
                 {
-                    TpScreenResponse data = JsonConvert.DeserializeObject<TpScreenResponse>(responseContent);
+                    var data = JsonConvert.DeserializeObject<TpScreenResponse>(responseContent);
 
-                    if (data.TpCards.Count > 0)
+                    if (data.tpCards.Count > 0)
                     {
                         // we got TP CARDS to choose.... time to choose one.. lets pick first -> index 0.
                         // https://i.gyazo.com/8e375b3f859fd92626b783c364f39b7b.png
@@ -236,12 +225,13 @@ namespace IAH_SinglePlayerAutomation
                         });
 
 
-                        PostResponse postResponse = await SendPostRequestAsync("/v1/tpscreen", jsonData);
+                        var postResponse = await SendPostRequestAsync("/v1/tpscreen", jsonData);
 
 
                         return true;
                     }
-                    else if (data.ChaosCards.Count > 0)
+
+                    if (data.chaosCards.Count > 0)
                     {
                         // same thing as above but only for chaos cards
 
@@ -251,7 +241,7 @@ namespace IAH_SinglePlayerAutomation
                         });
 
 
-                        PostResponse postResponse = await SendPostRequestAsync("/v1/tpscreen", jsonData);
+                        var postResponse = await SendPostRequestAsync("/v1/tpscreen", jsonData);
 
 
                         return true;
@@ -264,18 +254,15 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> GetGameState(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
             if (response.state == "INGAME" || response.state == "TPSCREEN")
             {
-                var getReponse = await httpClient.GetAsync($"/v1/gamestate");
-                string responseContent = await getReponse.Content.ReadAsStringAsync();
+                var getReponse = await httpClient.GetAsync("/v1/gamestate");
+                var responseContent = await getReponse.Content.ReadAsStringAsync();
                 if (getReponse.IsSuccessStatusCode)
                 {
-                    GameStateResponse data = JsonConvert.DeserializeObject<GameStateResponse>(responseContent);
+                    var data = JsonConvert.DeserializeObject<GameStateResponse>(responseContent);
                     gameState.modemConnected = data.modemConnected;
                     gameState.pcStarted = data.pcStarted;
                     gameState.osSelected = data.osSelected;
@@ -294,17 +281,30 @@ namespace IAH_SinglePlayerAutomation
             return false;
         }
 
+        private static async Task<bool> GetSystemState(TransitionResponse response)
+        {
+            var getReponse = await httpClient.GetAsync("/v1/system");
+            var responseContent = await getReponse.Content.ReadAsStringAsync();
+            if (getReponse.IsSuccessStatusCode)
+            {
+                var data = JsonConvert.DeserializeObject<SystemResponse>(responseContent);
+                gameState.fps = data.fps;
+                gameState.version = data.version;
+                gameState.timeRunning = data.timeRunning;
+
+            }
+
+            return true;
+        }
+
         private static async Task<bool> ClickLevelUp()
         {
             // lets spawn first unit from our www block.. in windowsOS  for example first one (zero index) is Good Bot
 
             if (gameState != null && gameState.TPCards > 0)
             {
-                var getReponse = await httpClient.GetAsync($"/v1/levelup");
-                if (getReponse.IsSuccessStatusCode)
-                {
-                    return true;
-                }
+                var getReponse = await httpClient.GetAsync("/v1/levelup");
+                if (getReponse.IsSuccessStatusCode) return true;
             }
 
             return false;
@@ -315,21 +315,17 @@ namespace IAH_SinglePlayerAutomation
             // if we have LESSERHEAL framework item in our inventory we will use it on our remote bot when it is low and heal ourselves.
             if (gameState != null && gameState.webBufferTiles.Count == 0 && gameState.modemConnected)
             {
-                List<Tile> tiles = gameState.GetTilesByType("OSTILE", "FRAMEWORK");
+                var tiles = gameState.GetTilesByType("OSTILE", "FRAMEWORK");
 
                 //do note that this will use first remoteuserbot, it could be enemy, but for multiplayer you would want to write own code.
-                List<Entity> entities = gameState.GetEntitiesByType("REMOTEUSERBOT");
+                var entities = gameState.GetEntitiesByType("REMOTEUSERBOT");
                 if (entities.Count > 0)
-                {
-                    for (int i = 0; i < tiles.Count; i++)
-                    {
-                        if (tiles[i].FrameworkType == "LESSERHEAL")
+                    for (var i = 0; i < tiles.Count; i++)
+                        if (tiles[i].frameworkType == "LESSERHEAL")
                         {
                             await FrameworkAction(tiles[i].uniqueID, entities[0].uniqueID);
                             return true;
                         }
-                    }
-                }
             }
 
             return true;
@@ -340,15 +336,12 @@ namespace IAH_SinglePlayerAutomation
             // lets spawn first unit from our www block.. in windowsOS  for example first one (zero index) is Good Bot
             if (gameState != null && gameState.webBufferTiles.Count == 0 && gameState.modemConnected)
             {
-                Tile tile = gameState.GetTileByType("OSTILE", "WWW_BLOCK");
+                var tile = gameState.GetTileByType("OSTILE", "WWW_BLOCK");
 
                 // we dont have, nwm...
-                if (tile == null)
-                {
-                    return false;
-                }
+                if (tile == null) return false;
 
-                if (tile.IsBusy == false)
+                if (tile.isBusy == false)
                 {
                     await TileAction(tile.uniqueID, -1);
 
@@ -368,16 +361,13 @@ namespace IAH_SinglePlayerAutomation
 
             if (gameState != null && gameState.webBufferTiles.Count == 0 && gameState.modemConnected)
             {
-                Tile tile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
-                Tile ocupied = gameState.GetTileByType("MAPTILE", "OCUPIED");
+                var tile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
+                var ocupied = gameState.GetTileByType("MAPTILE", "OCUPIED");
 
-                // for this example. we only browse net once... if we have ocupied tile somewhere dont browse net.
-                if (ocupied != null)
-                {
-                    return false;
-                }
+                // for this example. we only browse net once... if we have ocupied Tile somewhere dont browse net.
+                if (ocupied != null) return false;
 
-                if (tile != null && tile.IsBusy == false)
+                if (tile != null && tile.isBusy == false)
                 {
                     await TileAction(tile.uniqueID, -1);
 
@@ -395,42 +385,42 @@ namespace IAH_SinglePlayerAutomation
         {
             if (gameState != null && gameState.tiles.Count > 0 && gameState.pcStarted == false)
             {
-                Tile tile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
-                if (tile != null && tile.IsBusy == false)
+                var tile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
+                if (tile != null && tile.isBusy == false)
                 {
                     await TileAction(tile.uniqueID, -1);
 
                     await Task.Delay(500);
 
-                    bool result = await TileAction(tile.uniqueID, 0);
+                    var result = await TileAction(tile.uniqueID, 0);
                 }
             }
 
             else if (gameState != null && gameState.tiles.Count > 0 && string.IsNullOrEmpty(gameState.osSelected))
             {
-                Tile tile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
-                if (tile != null && tile.IsBusy == false)
+                var tile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
+                if (tile != null && tile.isBusy == false)
                 {
                     await TileAction(tile.uniqueID, -1);
 
                     await Task.Delay(500);
 
-                    bool result = await TileAction(tile.uniqueID, 0); // 0 windows, 1 linux, 2 love
+                    var result = await TileAction(tile.uniqueID, 0); // 0 windows, 1 linux, 2 love
                 }
             }
 
             else if (gameState != null && gameState.tiles.Count > 0 && gameState.modemConnected == false)
             {
-                // you could make function in the gameState class that check that no tile is busy.
-                Tile pcTile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
-                Tile tile = gameState.GetTileByType("ITEMTILE", "MODEM");
-                if (tile != null && tile.IsBusy == false && pcTile.IsBusy == false)
+                // you could make function in the gameState class that check that no Tile is busy.
+                var pcTile = gameState.GetTileByType("MAPTILE", "PLAYERPC");
+                var tile = gameState.GetTileByType("ITEMTILE", "MODEM");
+                if (tile != null && tile.isBusy == false && pcTile.isBusy == false)
                 {
                     await TileAction(tile.uniqueID, -1);
 
                     await Task.Delay(500);
 
-                    bool result = await TileAction(tile.uniqueID, 0);
+                    var result = await TileAction(tile.uniqueID, 0);
                 }
             }
 
@@ -439,10 +429,7 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> MainMenuTransition(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
 
             if (response.state == "MAIN_MENU_INTRO")
@@ -454,11 +441,8 @@ namespace IAH_SinglePlayerAutomation
 
                 Console.WriteLine("Enter Main Menu...");
 
-                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
-                if (postResponse.IsSuccessStatusCode)
-                {
-                    response.state = ""; // consume state.
-                }
+                var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.
 
                 return true;
             }
@@ -468,10 +452,7 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> ModeSelectionTransition(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
             if (response.state == "MAIN_MENU")
             {
@@ -482,11 +463,8 @@ namespace IAH_SinglePlayerAutomation
 
                 Console.WriteLine("Enter Mode Selection Menu...");
 
-                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
-                if (postResponse.IsSuccessStatusCode)
-                {
-                    response.state = ""; // consume state.
-                }
+                var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.
 
                 return true;
             }
@@ -496,10 +474,7 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> HackerSelectionTransition(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
 
             if (response.state == "MODE_SELECTION")
@@ -511,11 +486,8 @@ namespace IAH_SinglePlayerAutomation
 
                 Console.WriteLine("Enter Hacker Selection Menu...");
 
-                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
-                if (postResponse.IsSuccessStatusCode)
-                {
-                    response.state = ""; // consume state.
-                }
+                var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.
 
                 return true;
             }
@@ -525,10 +497,7 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> HackerSelectTransition(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
             if (response.state == "HACKER_SELECTION")
             {
@@ -542,11 +511,8 @@ namespace IAH_SinglePlayerAutomation
 
                 Console.WriteLine("Select Hacker...");
 
-                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
-                if (postResponse.IsSuccessStatusCode)
-                {
-                    response.state = ""; // consume state.
-                }
+                var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.
 
                 return true;
             }
@@ -556,10 +522,7 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> GameOverTransition(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
 
             if (response.state == "GAMEOVER")
@@ -571,11 +534,8 @@ namespace IAH_SinglePlayerAutomation
 
                 Console.WriteLine("Game Over...");
 
-                PostResponse postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
-                if (postResponse.IsSuccessStatusCode)
-                {
-                    response.state = ""; // consume state.
-                }
+                var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.
 
                 return true;
             }
@@ -585,19 +545,16 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> GetTiles(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
 
             if (response.state == "INGAME" || response.state == "TPSCREEN")
             {
-                var getReponse = await httpClient.GetAsync($"/v1/tiles");
-                string responseContent = await getReponse.Content.ReadAsStringAsync();
+                var getReponse = await httpClient.GetAsync("/v1/tiles");
+                var responseContent = await getReponse.Content.ReadAsStringAsync();
                 if (getReponse.IsSuccessStatusCode)
                 {
-                    TilesResponse data = JsonConvert.DeserializeObject<TilesResponse>(responseContent);
+                    var data = JsonConvert.DeserializeObject<TilesResponse>(responseContent);
                     gameState.tiles = data.tiles;
                 }
 
@@ -609,21 +566,18 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> GetGrid(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
 
             if (response.state == "INGAME" || response.state == "TPSCREEN")
             {
                 // very expensive function -> only returns success once for every grid change. store well.
                 // you need this if you want to make advanced movement logic for your bots.
-                var getReponse = await httpClient.GetAsync($"/v1/grid");
-                string responseContent = await getReponse.Content.ReadAsStringAsync();
+                var getReponse = await httpClient.GetAsync("/v1/grid");
+                var responseContent = await getReponse.Content.ReadAsStringAsync();
                 if (getReponse.IsSuccessStatusCode)
                 {
-                    GridResponse data = JsonConvert.DeserializeObject<GridResponse>(responseContent);
+                    var data = JsonConvert.DeserializeObject<GridResponse>(responseContent);
                     gameState.gridNodes = data.gridNodes;
                     return true;
                 }
@@ -634,18 +588,15 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> GetEntities(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
             if (response.state == "INGAME" || response.state == "TPSCREEN")
             {
-                var getReponse = await httpClient.GetAsync($"/v1/entities");
-                string responseContent = await getReponse.Content.ReadAsStringAsync();
+                var getReponse = await httpClient.GetAsync("/v1/entities");
+                var responseContent = await getReponse.Content.ReadAsStringAsync();
                 if (getReponse.IsSuccessStatusCode)
                 {
-                    EntitiesResponse data = JsonConvert.DeserializeObject<EntitiesResponse>(responseContent);
+                    var data = JsonConvert.DeserializeObject<EntitiesResponse>(responseContent);
                     gameState.entities = data.entities;
                 }
 
@@ -657,44 +608,38 @@ namespace IAH_SinglePlayerAutomation
 
         private static async Task<bool> GetBufferTiles(TransitionResponse response)
         {
-            if (string.IsNullOrEmpty(response.state))
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(response.state)) return false;
 
 
             if (response.state == "INGAME")
             {
-                var getReponse = await httpClient.GetAsync($"/v1/buffer");
-                string responseContent = await getReponse.Content.ReadAsStringAsync();
+                var getReponse = await httpClient.GetAsync("/v1/buffer");
+                var responseContent = await getReponse.Content.ReadAsStringAsync();
                 if (getReponse.IsSuccessStatusCode)
                 {
-                    BufferResponse data = JsonConvert.DeserializeObject<BufferResponse>(responseContent);
+                    var data = JsonConvert.DeserializeObject<BufferResponse>(responseContent);
                     gameState.webBufferTiles = data.tiles;
 
                     // we have websites in a buffer, lets try place website from the buffer on the map.
                     if (gameState.webBufferTiles.Count > 0)
                     {
-                        Tile targetTile = gameState.GetTileByType("MAPTILE", "EMPTY");
+                        var targetTile = gameState.GetTileByType("MAPTILE", "EMPTY");
 
-                        if (targetTile == null)
-                        {
-                            return false;
-                        }
+                        if (targetTile == null) return false;
 
                         gameState.PerformedAction();
 
                         var jsonData = JsonConvert.SerializeObject(new Dictionary<string, object>
                         {
                             {"bufferUniqueID", gameState.webBufferTiles[0].uniqueID},
-                            // we need empty tile, its where we want to place.
+                            // we need empty Tile, its where we want to place.
                             {"tileUniqueID", targetTile.uniqueID}
                         });
 
                         Console.WriteLine("Place Buffer Item on the Map...");
 
-                        PostResponse postResponse = await SendPostRequestAsync("/v1/buffer", jsonData);
-                        if (postResponse.IsSuccessStatusCode)
+                        var postResponse = await SendPostRequestAsync("/v1/buffer", jsonData);
+                        if (postResponse.isSuccessStatusCode)
                         {
                             Console.WriteLine("Buffer Item Placed on The Map...");
                             await Task.Delay(2000);
@@ -715,18 +660,13 @@ namespace IAH_SinglePlayerAutomation
                 {"uniqueID", tileUniqueID},
                 {
                     "action", action
-                } // -1: just open or close, 0-4 Button Index -> which button to press, you can send button index without opening tile, game will open tile for you and click button.
+                } // -1: just open or close, 0-4 Button Index -> which button to press, you can send button index without opening Tile, game will open Tile for you and click button.
             });
 
-            PostResponse postResponse = await SendPostRequestAsync("/v1/tileaction", jsonData);
-            if (postResponse.IsSuccessStatusCode)
-            {
+            var postResponse = await SendPostRequestAsync("/v1/tileaction", jsonData);
+            if (postResponse.isSuccessStatusCode)
                 return true;
-            }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
         private static async Task<bool> FrameworkAction(string tileUniqueID, string entityUniqueID)
@@ -737,28 +677,23 @@ namespace IAH_SinglePlayerAutomation
                 {"entityUniqueID", entityUniqueID}
             });
 
-            PostResponse postResponse = await SendPostRequestAsync("/v1/frameworkaction", jsonData);
-            if (postResponse.IsSuccessStatusCode)
-            {
+            var postResponse = await SendPostRequestAsync("/v1/frameworkaction", jsonData);
+            if (postResponse.isSuccessStatusCode)
                 return true;
-            }
-            else
-            {
-                return false;
-            }
+            return false;
         }
 
-        static async Task<PostResponse> SendPostRequestAsync(string endpoint, string jsonData)
+        private static async Task<PostResponse> SendPostRequestAsync(string endpoint, string jsonData)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            request.Content = new StringContent(jsonData, System.Text.Encoding.UTF8, "application/json");
+            request.Content = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
             var response = await httpClient.SendAsync(request).ConfigureAwait(false);
 
-            string responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            return new PostResponse()
-                {responseString = responseContent, IsSuccessStatusCode = response.IsSuccessStatusCode};
+            return new PostResponse
+                {responseString = responseContent, isSuccessStatusCode = response.IsSuccessStatusCode};
         }
 
         public static async Task<bool> Raycast(string uniqueID, string targetUniqueID)
@@ -769,15 +704,10 @@ namespace IAH_SinglePlayerAutomation
                 {"targetUniqueID", targetUniqueID}
             });
 
-            PostResponse postResponse = await SendPostRequestAsync("/v1/raycast", jsonData);
-            if (postResponse.IsSuccessStatusCode)
-            {
+            var postResponse = await SendPostRequestAsync("/v1/raycast", jsonData);
+            if (postResponse.isSuccessStatusCode)
                 return true;
-            }
-            else
-            {
-                return false;
-            }
+            return false;
         }
     }
 }
