@@ -1,4 +1,4 @@
-u<p align="center">  <img src="iah_logo.png" width="350" title="IAH: INTERNET WAR logo"/> </p>
+<p align="center">  <img src="iah_logo.png" width="350" title="IAH: INTERNET WAR logo"/> </p>
 
 IAH: INTERNET WAR is a Turn-based strategy that meets real-time battles. Explore the internet, fight enemies as a hacker, and create combat bots. Play your way with a cursor, controller, or code.
 
