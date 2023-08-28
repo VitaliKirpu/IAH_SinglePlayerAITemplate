@@ -25,3 +25,7 @@ Singleplayer API Documentation **https://github.com/VitaliKirpu/IAH_SinglePlayer
 
 ### Troubleshooting
 - AI Template Crashes on Launch, or nothing happens. -> Make sure to do port forwarding and ensure the game runs. https://github.com/VitaliKirpu/IAH_SinglePlayerAITemplate/blob/016dd4caf0547f001e7ef03a33c421afb9412fb2/IAH_SinglePlayerAutomation/Program.cs#L29
+
+### TODO
+- Add Support for Multiplayer Co-Op.
+- Add Support for Invading Other Players.
