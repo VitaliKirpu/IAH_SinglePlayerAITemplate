@@ -1,4 +1,4 @@
-<p align="center">  <img src="iah_logo.png" width="350" title="IAH: INTERNET WAR logo"/> </p>
+u<p align="center">  <img src="iah_logo.png" width="350" title="IAH: INTERNET WAR logo"/> </p>
 
 IAH: INTERNET WAR is a Turn-based strategy that meets real-time battles. Explore the internet, fight enemies as a hacker, and create combat bots. Play your way with a cursor, controller, or code.
 
@@ -24,4 +24,4 @@ Singleplayer API Documentation **https://github.com/VitaliKirpu/IAH_SinglePlayer
 3. Launch this Example API Template Project; automation should occur now. From the main menu, the AI will navigate the UI, select Hacker, enter the game, perform all necessary actions, create units, and battle enemies if they are present.
 
 ### Troubleshooting
-- AI Template Crashes on Launch, or nothing happens. -> Make sure to do port forwarding. https://github.com/VitaliKirpu/IAH_SinglePlayerAITemplate/blob/016dd4caf0547f001e7ef03a33c421afb9412fb2/IAH_SinglePlayerAutomation/Program.cs#L29
+- AI Template Crashes on Launch, or nothing happens. -> Make sure to do port forwarding and ensure the game runs. https://github.com/VitaliKirpu/IAH_SinglePlayerAITemplate/blob/016dd4caf0547f001e7ef03a33c421afb9412fb2/IAH_SinglePlayerAutomation/Program.cs#L29
