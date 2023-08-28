@@ -12,7 +12,7 @@ Main Website: **https://iamhacker.cc/**
 
 Online API Documentation: **https://iamhacker.cc/documentation**
 
-Singleplayer API Documentation **https://github.com/VitaliKirpu/IAH_SinglePlayerAITemplate/wiki**
+Singleplayer API Documentation **[https://github.com/VitaliKirpu/IAH_SinglePlayerAITemplate/wiki](https://github.com/VitaliKirpu/IAH_SinglePlayerAITemplate/wiki/IAH:-INTERNET-WAR-%7C-SINGLEPLAYER-AI-API)**
 
 <p align="center"><img src="GIF_2.gif" title="combat bot robots shooting"/> </p>
 
