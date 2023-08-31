@@ -10,7 +10,7 @@ namespace IAH_SinglePlayerAutomation.Class
         public List<GridNode> gridNodes = new List<GridNode>();
         public List<WebBufferTile> webBufferTiles = new List<WebBufferTile>();
         public List<Tile> tiles = new List<Tile>();
-        
+
         public int actionTurn;
         public int chaosCards;
         public List<Entity> entities = new List<Entity>();

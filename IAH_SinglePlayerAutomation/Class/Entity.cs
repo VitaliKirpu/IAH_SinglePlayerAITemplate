@@ -38,9 +38,9 @@ namespace IAH_SinglePlayerAutomation.Class
         public bool reloading;
         public Vector3 right;
 
-        public async Task RunAI()
+        public async Task RunAi()
         {
-            var entities = Program.gameState.GetEntitiesByFlag("HOSTILE");
+            var entities = Program.GameState.GetEntitiesByFlag("HOSTILE");
 
             //remove bots that have creep flag or non-combat
             entities = entities.Where(entity => !entity.tags.Contains("CREEP") && !entity.tags.Contains("NON-COMBAT"))
@@ -53,31 +53,31 @@ namespace IAH_SinglePlayerAutomation.Class
             {
                 var distance = Vector3.Distance(position, entities[0].position);
 
-                var blocked = await Program.Raycast(uniqueID, entities[0].uniqueID);
+                var blocked = await Requests.RayCast(uniqueID, entities[0].uniqueID);
 
                 if (distance < attackRange && blocked == false)
                 {
-                    Program.BotAction(uniqueID, "rotate", entities[0].position);
-                    Program.BotAction(uniqueID, "stop", "");
+                    Requests.BotAction(uniqueID, "rotate", entities[0].position);
+                    Requests.BotAction(uniqueID, "stop", "");
                 }
                 else
                 {
-                    Program.BotAction(uniqueID, "move", entities[0].position);
-                    Program.BotAction(uniqueID, "rotate", entities[0].position);
+                    Requests.BotAction(uniqueID, "move", entities[0].position);
+                    Requests.BotAction(uniqueID, "rotate", entities[0].position);
                 }
 
-                Program.BotAction(uniqueID, "attack", entities[0].uniqueID);
+                Requests.BotAction(uniqueID, "attack", entities[0].uniqueID);
             }
             else
             {
                 // no enemy bots. reload weapon and spin 360.
                 if (ammo != maxAmmo && reloading == false)
                 {
-                    Program.BotAction(uniqueID, "reload", "");
-                    Program.BotAction(uniqueID, "chat", "Reloading!");
+                    Requests.BotAction(uniqueID, "reload", "");
+                    Requests.BotAction(uniqueID, "chat", "Reloading!");
                 }
 
-                Program.BotAction(uniqueID, "rotate", position + right);
+                Requests.BotAction(uniqueID, "rotate", position + right);
             }
 
             /*
