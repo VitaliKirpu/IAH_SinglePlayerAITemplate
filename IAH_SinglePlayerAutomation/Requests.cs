@@ -31,7 +31,7 @@ namespace IAH_SinglePlayerAutomation.Class
                     {
                         "ip", "127.0.0.1"
                     }, // in campaign mode this will be always 127.0.0.1 for your RemoteUserBot even if you operate your AI from some other PC.
-                    {"apiKey", "uDYFP81Pvwf1-120vs"} // HTTPS://IAMHACKER.CC -> Get API Key
+                    {"apiKey", "yourkey"} // HTTPS://IAMHACKER.CC -> Get API Key
                 });
 
                 var postResponse = await SendPostRequestAsync("/v1/apipassword", jsonData);
@@ -136,7 +136,7 @@ namespace IAH_SinglePlayerAutomation.Class
 
             if (response.state == "INGAME" || response.state == "TPSCREEN")
             {
-                var getResponse = await Program._httpClient.GetAsync("/v1/Program.GameState");
+                var getResponse = await Program._httpClient.GetAsync("/v1/gameState");
                 var responseContent = await getResponse.Content.ReadAsStringAsync();
                 if (getResponse.IsSuccessStatusCode)
                 {
