@@ -23,6 +23,11 @@ Singleplayer API Documentation **[https://github.com/VitaliKirpu/IAH_SinglePlaye
 2. Launch IAH: INTERNET WAR Game. Default AI Port is 6800, but you can change this with -apiPort 6900 launch parameter
 3. Launch this Example API Template Project; automation should occur now. From the main menu, the AI will navigate the UI, select Hacker, enter the game, perform all necessary actions, create units, and battle enemies if they are present.
 
+### Testing before buying API Key?
+
+This sample code will partially work without an API Key. All menu functions will work, but you won't be able to control your actual units.
+
+
 ### Troubleshooting
 - AI Template Crashes on Launch, or nothing happens. -> Make sure to do port forwarding and ensure the game runs. https://github.com/VitaliKirpu/IAH_SinglePlayerAITemplate/blob/d4f815aa17dfa7a4105e00e24e6ca40ed7c67f33/IAH_SinglePlayerAutomation/Program.cs#L31
 
