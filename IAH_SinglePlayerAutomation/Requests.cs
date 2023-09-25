@@ -383,7 +383,7 @@ namespace IAH_SinglePlayerAutomation.Class
                     {"transitionValue", 0}
                 });
 
-                Program.GameState = null; // reset internal state
+                Program.GameState = new GameState(); // reset internal state
 
                 Console.WriteLine("Select Hacker...");
 
