@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace IAH_SinglePlayerAutomation.Class
@@ -13,5 +14,16 @@ namespace IAH_SinglePlayerAutomation.Class
         public Vector3 position;
         public string type;
         public string uniqueID;
+        
+        public  List<TileButtonState> buttonEnabled = new List<TileButtonState>();
     }
+    
+ 
+    public class TileButtonState
+    {
+        public int cost;
+        public bool enabled;
+   
+    }
+    
 }
