@@ -190,7 +190,8 @@ namespace IAH_SinglePlayerAutomation.Class
         public static async Task<bool> UseFramework()
         {
             // if we have LESSERHEAL framework item in our inventory we will use it on our remote bot when it is low and heal ourselves.
-            if (Program.GameState != null && Program.GameState.webBufferTiles.Count == 0 && Program.GameState.modemConnected)
+            if (Program.GameState != null && Program.GameState.webBufferTiles.Count == 0 &&
+                Program.GameState.modemConnected)
             {
                 var tiles = Program.GameState.GetTilesByType("OSTILE", "FRAMEWORK");
 
@@ -210,20 +211,52 @@ namespace IAH_SinglePlayerAutomation.Class
 
         public static async Task<bool> UseWWWBlock()
         {
-            // lets spawn first unit from our www block.. in windowsOS  for example first one (zero index) is Good Bot
-            if (Program.GameState != null && Program.GameState.webBufferTiles.Count == 0 && Program.GameState.modemConnected)
+            if (Entity.HostileEntities() > 0)
+            {
+                return false;
+            }
+
+            if (Program.GameState != null && Program.GameState.webBufferTiles.Count == 0 &&
+                Program.GameState.modemConnected)
             {
                 var tile = Program.GameState.GetTileByType("OSTILE", "WWW_BLOCK");
 
-                if (tile == null) return false;
+                if (tile == null)
+                {
+                    // if we dont have WWW Block / Bot Block we need generate it from the OS Tile.
+                    tile = Program.GameState.GetTileByType("OSTILE", "OPERATINGSYSTEM");
 
-                if (tile.isBusy == false)
+                    if (tile != null && tile.isBusy == false)
+                    {
+                        await TileAction(tile.uniqueID, -1);
+
+                        await Task.Delay(500);
+
+                        Program.GameState.PerformedAction();
+                        return await TileAction(tile.uniqueID, 0);
+                    }
+
+                    // if we dont have WWW Block / Bot Block we need generate it from the OS Tile.
+                    tile = Program.GameState.GetTileByType("OSTILE", "OPERATINGSYSTEMRED");
+
+                    if (tile != null && tile.isBusy == false)
+                    {
+                        await TileAction(tile.uniqueID, -1);
+
+                        await Task.Delay(500);
+
+                        Program.GameState.PerformedAction();
+                        return await TileAction(tile.uniqueID, 0);
+                    }
+                }
+                else if (tile.isBusy == false)
                 {
                     await TileAction(tile.uniqueID, -1);
 
                     await Task.Delay(500);
 
                     Program.GameState.PerformedAction();
+                    // lets spawn unit from our www block.. in windowsOS  for example first one (zero index) is Good Bot
                     return await TileAction(tile.uniqueID, 0);
                 }
             }
@@ -235,7 +268,13 @@ namespace IAH_SinglePlayerAutomation.Class
         {
             // we could later expand this by checkeing that there  are no enemies. etc
 
-            if (Program.GameState != null && Program.GameState.webBufferTiles.Count == 0 && Program.GameState.modemConnected)
+            if (Entity.HostileEntities() > 0)
+            {
+                return false;
+            }
+
+            if (Program.GameState != null && Program.GameState.webBufferTiles.Count == 0 &&
+                Program.GameState.modemConnected)
             {
                 var tile = Program.GameState.GetTileByType("MAPTILE", "PLAYERPC");
                 var ocupied = Program.GameState.GetTileByType("MAPTILE", "OCUPIED");
@@ -272,7 +311,8 @@ namespace IAH_SinglePlayerAutomation.Class
                 }
             }
 
-            else if (Program.GameState != null && Program.GameState.tiles.Count > 0 && string.IsNullOrEmpty(Program.GameState.osSelected))
+            else if (Program.GameState != null && Program.GameState.tiles.Count > 0 &&
+                     string.IsNullOrEmpty(Program.GameState.osSelected))
             {
                 var tile = Program.GameState.GetTileByType("MAPTILE", "PLAYERPC");
                 if (tile != null && tile.isBusy == false)
@@ -285,7 +325,8 @@ namespace IAH_SinglePlayerAutomation.Class
                 }
             }
 
-            else if (Program.GameState != null && Program.GameState.tiles.Count > 0 && Program.GameState.modemConnected == false)
+            else if (Program.GameState != null && Program.GameState.tiles.Count > 0 &&
+                     Program.GameState.modemConnected == false)
             {
                 // you could make function in the Program.GameState class that check that no Tile is busy.
                 var pcTile = Program.GameState.GetTileByType("MAPTILE", "PLAYERPC");
@@ -386,6 +427,55 @@ namespace IAH_SinglePlayerAutomation.Class
                 Program.GameState = new GameState(); // reset internal state
 
                 Console.WriteLine("Select Hacker...");
+
+                var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public static async Task<bool> SelectArcadeCluster(TransitionResponse response)
+        {
+            if (string.IsNullOrEmpty(response.state)) return false;
+
+            if (response.state == "CHOOSE_CAMPAIGN")
+            {
+                var jsonData = JsonConvert.SerializeObject(new Dictionary<string, object>
+                {
+                    {"transition", "SELECT_ARCADE"}
+                });
+
+                Program.GameState = new GameState(); // reset internal state
+
+                Console.WriteLine("Select Arcade Cluster...");
+
+                var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
+                if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.
+
+                return true;
+            }
+
+            return false;
+        }
+
+
+        public static async Task<bool> StartArcade(TransitionResponse response)
+        {
+            if (string.IsNullOrEmpty(response.state)) return false;
+
+            if (response.state == "ARCADE_MENU")
+            {
+                var jsonData = JsonConvert.SerializeObject(new Dictionary<string, object>
+                {
+                    {"transition", "START_ARCADE"},
+                });
+
+                Program.GameState = new GameState(); // reset internal state
+
+                Console.WriteLine("Start Arcade...");
 
                 var postResponse = await SendPostRequestAsync("/v1/playerstate", jsonData);
                 if (postResponse.isSuccessStatusCode) response.state = ""; // consume state.

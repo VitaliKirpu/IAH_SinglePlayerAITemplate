@@ -85,5 +85,15 @@ namespace IAH_SinglePlayerAutomation.Class
              * skill: value int from 0 to 3. bot will use skill if has any.
              */
         }
+
+        public static int HostileEntities()
+        {
+            var entities = Program.GameState.GetEntitiesByFlag("HOSTILE");
+
+            //remove bots that have creep flag or non-combat
+            entities = entities.Where(entity => !entity.tags.Contains("CREEP") && !entity.tags.Contains("NON-COMBAT"))
+                .ToList();
+            return entities.Count;
+        }
     }
 }

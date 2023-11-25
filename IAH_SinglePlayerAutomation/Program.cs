@@ -51,6 +51,8 @@ namespace IAH_SinglePlayerAutomation
                          * MODE_SELECTION
                          * HACKER_SELECTION
                          * HACKER_SELECT
+                         * CHOOSE_CAMPAIGN
+                         * ARCADE_MENU
                          * SANDBOX
                          * INGAME
                          * TPSCREEN
@@ -59,12 +61,14 @@ namespace IAH_SinglePlayerAutomation
 
                         if (GameState == null) GameState = new GameState();
 
-                        // STEP 1: Do some Transitions in the Main Menu
+                        // STEP 1: Do some Transitions in the Main Menu (Boilerplate)
                         await Requests.MainMenuTransition(requestResponse);
                         await Requests.ModeSelectionTransition(requestResponse);
                         await Requests.HackerSelectionTransition(requestResponse);
                         await Requests.HackerSelectTransition(requestResponse);
-
+                        await Requests.SelectArcadeCluster(requestResponse);
+                        await Requests.StartArcade(requestResponse);
+                        
                         // STEP2: These happen INGAME, we get some data. 
                         await Requests.GetTiles(requestResponse);
                         await Requests.GetGrid(requestResponse);
