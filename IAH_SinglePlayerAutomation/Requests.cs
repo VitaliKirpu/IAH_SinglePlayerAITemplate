@@ -31,7 +31,7 @@ namespace IAH_SinglePlayerAutomation.Class
                     {
                         "ip", "127.0.0.1"
                     }, // in campaign mode this will be always 127.0.0.1 for your RemoteUserBot even if you operate your AI from some other PC.
-                    {"apiKey", "yourkey"} // HTTPS://IAMHACKER.CC -> Get API Key
+                    {"apiKey", "uDYFasda21Pvwf1-320vs"} // HTTPS://IAMHACKER.CC -> Get API Key
                 });
 
                 var postResponse = await SendPostRequestAsync("/v1/apipassword", jsonData);
@@ -73,7 +73,7 @@ namespace IAH_SinglePlayerAutomation.Class
         public static async Task RunAiLogic()
         {
             for (var i = 0; i < Program.GameState.entities.Count; i++)
-                if (Program.GameState.entities[i].ip == _remoteBotIp)
+                if (Program.GameState.entities[i].initData.ip == _remoteBotIp)
                     Program.GameState.entities[i].RunAi();
 
             // 0.2 sec delay..
@@ -196,12 +196,12 @@ namespace IAH_SinglePlayerAutomation.Class
                 var tiles = Program.GameState.GetTilesByType("OSTILE", "FRAMEWORK");
 
                 //do note that this will use first remoteuserbot, it could be enemy, but for multiplayer you would want to write own code.
-                var entities = Program.GameState.GetEntitiesByType("REMOTEUSERBOT");
+                var entities = Program.GameState.GetEntitiesByType(30);
                 if (entities.Count > 0)
                     for (var i = 0; i < tiles.Count; i++)
                         if (tiles[i].frameworkType == "LESSERHEAL")
                         {
-                            await FrameworkAction(tiles[i].uniqueID, entities[0].uniqueID);
+                            await FrameworkAction(tiles[i].uniqueID, entities[0].id);
                             return true;
                         }
             }

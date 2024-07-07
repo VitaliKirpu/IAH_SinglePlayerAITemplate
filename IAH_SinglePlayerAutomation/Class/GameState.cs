@@ -66,14 +66,14 @@ namespace IAH_SinglePlayerAutomation.Class
 
         public List<Entity> GetEntitiesByFlag(string team)
         {
-            var filteredEntities = entities.Where(e => e.team == team).ToList();
+            var filteredEntities = entities.Where(e => e.initData.team == team).ToList();
 
             return filteredEntities;
         }
 
-        public List<Entity> GetEntitiesByType(string type)
+        public List<Entity> GetEntitiesByType(ushort type)
         {
-            var filteredEntities = entities.Where(e => e.type == type).ToList();
+            var filteredEntities = entities.Where(e => e.initData.type == type).ToList();
 
             return filteredEntities;
         }

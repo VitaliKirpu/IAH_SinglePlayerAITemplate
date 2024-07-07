@@ -5,79 +5,134 @@ using System.Threading.Tasks;
 
 namespace IAH_SinglePlayerAutomation.Class
 {
-    public class Entity
+    public class TransformedEntityVitals
     {
-        public List<string> equips = new List<string>();
-        public List<string> skills = new List<string>();
+        public short lvl;
+        public short hp;
+        public short maxHp;
+        public short sp;
+        public short maxSp;
+        public int xp;
+        public int xpReq;
+        public short armor;
+        public short maxArmor;
+        public short kills;
+    }
+
+    public class TransformedEntityCombat
+    {
+        public short ammo;
+        public short maxAmmo;
+        public float atkRange;
+        public bool reloading;
+        public float atkDelay;
+        public string targetId;
+    }
+    
+    public class TransformedEntityVectors
+    {
+        public Vector3 pos;
+        public Vector3 gotoPos;
+        public Vector3 fwd;
+        public Vector3 right;
+    }
+
+    public class TransformedEntityStates
+    {
+        public bool lookAtEnabled;
+        public Vector3 lookAt;
+        public bool playerForcedMovement;
+        public short splState;
+        public bool shootAt;
+        public Vector3 shootAtPos;
+        public short state;
+    }
+
+    public class TransformedEntityInitials
+    {
         public List<string> tags = new List<string>();
 
-        public float attackDelay;
-        public float attackRange;
-        public Vector3 forward;
+        public short scopeId;
+        public short ammoId;
+        public short barrelId;
+        public short charmId;
+        public short auraId;
+        public short scarfId;
+        public short hatId;
+        public short bracersId;
+        public short jointsId;
+        public short maskId;
 
-        public string targetUniqueID;
+        public float atkArcAngle;
+        public float frontArcAngle;
+        public float sideArcAngle;
+        public float backArcAngle;
+
+        public List<string> equips = new List<string>();
+        public List<string> skills = new List<string>();
+        public List<GenericDyeData> dyes = new List<GenericDyeData>();
 
         public string team;
         public string teamCustom;
-        public string type;
-        public string uniqueID;
+        public ushort type;
         public string ip;
+    }
 
-        public int ammo;
-        public int maxAmmo;
-
-        public int maxHp;
-        public int maxSp;
-        public int sp;
-        public int hp;
-        public int xp;
-        public int xpNeeded;
-
-        public Vector3 position;
-
-        public bool reloading;
-        public Vector3 right;
+    public class GenericDyeData
+    {
+        public ushort dyeType;
+        public ushort equipItemType;
+    }
+    
+    public class Entity
+    {
+        public string id;
+        public TransformedEntityInitials initData;
+        public TransformedEntityVitals vitals;
+        public TransformedEntityStates states;
+        public TransformedEntityVectors vectors;
+        public TransformedEntityCombat combat;
 
         public async Task RunAi()
         {
             var entities = Program.GameState.GetEntitiesByFlag("HOSTILE");
 
             //remove bots that have creep flag or non-combat
-            entities = entities.Where(entity => !entity.tags.Contains("CREEP") && !entity.tags.Contains("NON-COMBAT"))
+            entities = entities.Where(entity => !entity.initData.tags.Contains("CREEP") && !entity.initData.tags.Contains("NON-COMBAT"))
                 .ToList();
 
             // we attack closest enemy.
-            entities = entities.OrderBy(entity => Vector3.Distance(position, entity.position)).ToList();
+            entities = entities.OrderBy(entity => Vector3.Distance(vectors.pos, entity.vectors.pos)).ToList();
 
             if (entities.Count > 0) // battle mode.
             {
-                var distance = Vector3.Distance(position, entities[0].position);
+                var distance = Vector3.Distance(vectors.pos, entities[0].vectors.pos);
 
-                var blocked = await Requests.RayCast(uniqueID, entities[0].uniqueID);
+                var blocked = false;// await Requests.RayCast(id, entities[0].id);
 
-                if (distance < attackRange && blocked == false)
+                if (distance < combat.atkRange && blocked == false)
                 {
-                    Requests.BotAction(uniqueID, "rotate", entities[0].position);
-                    Requests.BotAction(uniqueID, "stop", "");
+                    Requests.BotAction(id, "rotate", entities[0].vectors.pos);
+                    Requests.BotAction(id, "stop", "");
                 }
                 else
                 {
-                    Requests.BotAction(uniqueID, "move", entities[0].position);
-                    Requests.BotAction(uniqueID, "rotate", entities[0].position);
+                    Requests.BotAction(id, "move", entities[0].vectors.pos);
+                    Requests.BotAction(id, "rotate", entities[0].vectors.pos);
                 }
 
-                Requests.BotAction(uniqueID, "attack", entities[0].uniqueID);
+                Requests.BotAction(id, "attack", entities[0].id);
             }
             else
             {
                 // no enemy bots. reload weapon and spin 360.
-                if (ammo != maxAmmo && reloading == false)
+                if (combat.ammo != combat.maxAmmo && combat.reloading == false)
                 {
-                    Requests.BotAction(uniqueID, "reload", "");
-                    Requests.BotAction(uniqueID, "chat", "Reloading!");
+                    Requests.BotAction(id, "reload", "");
+                    Requests.BotAction(id, "chat", "Reloading!");
                 }
 
-                Requests.BotAction(uniqueID, "rotate", position + right);
+                Requests.BotAction(id, "rotate", vectors.pos + vectors.right);
             }
 
             /*
@@ -91,7 +146,7 @@ namespace IAH_SinglePlayerAutomation.Class
             var entities = Program.GameState.GetEntitiesByFlag("HOSTILE");
 
             //remove bots that have creep flag or non-combat
-            entities = entities.Where(entity => !entity.tags.Contains("CREEP") && !entity.tags.Contains("NON-COMBAT"))
+            entities = entities.Where(entity => !entity.initData.tags.Contains("CREEP") && !entity.initData.tags.Contains("NON-COMBAT"))
                 .ToList();
             return entities.Count;
         }
