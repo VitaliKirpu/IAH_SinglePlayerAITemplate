@@ -31,7 +31,7 @@ namespace IAH_SinglePlayerAutomation.Class
                     {
                         "ip", "127.0.0.1"
                     }, // in campaign mode this will be always 127.0.0.1 for your RemoteUserBot even if you operate your AI from some other PC.
-                    {"apiKey", "uDYFasda21Pvwf1-320vs"} // HTTPS://IAMHACKER.CC -> Get API Key
+                    {"apiKey", "<key>"} // HTTPS://IAMHACKER.CC -> Get API Key
                 });
 
                 var postResponse = await SendPostRequestAsync("/v1/apipassword", jsonData);
